@@ -1,0 +1,16 @@
+[package]
+name = "queue-bridge-node"
+version = "0.1.0"
+edition = "2024"
+build = "build.rs"
+
+[dependencies]
+tonic = { version = "0.13", features = ["transport"] }
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+prost = "0.13"
+futures = "0.3"
+lmdb-queue = "0.1"
+
+[build-dependencies]
+tonic-build = "0.13"
