@@ -79,3 +79,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     try_join_all(tasks).await?;
     Ok(())
 }
+
+#[tokio::test]
+async fn test_push_message() -> Result<(), anyhow::Error> {
+    let channel = Endpoint::from_shared(format!("http://127.0.0.1:50051"))?
+        .tcp_keepalive(Some(std::time::Duration::from_secs(60)))
+        .connect()
+        .await?;
+
+    let mut client = QueueBridgeBalancerClient::new(channel);
+    client.push(QueueMessage{
+        queue_id: "ddj".to_string(),
+        message: "dsafasfasfa".as_bytes().to_vec()
+    }).await?;
+
+    Ok(())
+}
+
+#[test]
+fn test_get_queue() -> Result<(), anyhow::Error> {
+    let env = lmdb_queue::Env::new("/tmp/queue-bridge", None, None)?;
+    let mut comsumer = env.comsumer("ddj", None)?;
+
+    let mut message_count = 0;
+    loop {
+        let items = comsumer.pop_front_n(10)?;
+        if items.len() > 0 {
+            message_count += items.len();
+            // if message_count % (1024 * 100) == 0 {
+                println!("Got message: {}", String::from_utf8(items[0].data.clone())?);
+            // }
+        } else {
+            println!("Read {} messages.", message_count);
+            break;
+        }
+    }
+
+    Ok(())
+}
