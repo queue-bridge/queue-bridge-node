@@ -494,9 +494,9 @@ dependencies = [
 
 [[package]]
 name = "lmdb-queue"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10814d97b0b1ddf261ff608a8e99d5d4e2fd617e15795867de63b257b23a29b1"
+checksum = "73d4635d3ac7201e7234cc4cb56ab1a9f57e210c4527b057bc707117cee58f19"
 dependencies = [
  "anyhow",
  "libc",
