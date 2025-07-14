@@ -35,7 +35,7 @@ async fn subscribe_loop(
         match client.subscribe(SubscribeRequest{ queue_id: queue_id.clone() }).await {
             Ok(mut resp) => {
                 while let Ok(Some(QueueMessage{queue_id:_, message})) = resp.get_mut().message().await {
-                    println!("{}: {:?}", queue_id, message);
+                    // println!("{}: {:?}", queue_id, message);
                     if let Err(_) = get_queue().push_back(&queue_id, &message).await {
                         println!("Push to queue error, stopping.");
                         break;
@@ -88,10 +88,16 @@ async fn test_push_message() -> Result<(), anyhow::Error> {
         .await?;
 
     let mut client = QueueBridgeBalancerClient::new(channel);
-    client.push(QueueMessage{
-        queue_id: "ddj".to_string(),
-        message: "dsafasfasfa".as_bytes().to_vec()
-    }).await?;
+    for i in 0..1024*100 {
+        client.push(QueueMessage{
+            queue_id: "ddj".to_string(),
+            message: format!("msg: {i}").as_bytes().to_vec()
+        }).await?;
+
+        if i % 8192 == 0 {
+            println!("Pushed {i} messages.");
+        }
+    }
 
     Ok(())
 }
@@ -106,9 +112,9 @@ fn test_get_queue() -> Result<(), anyhow::Error> {
         let items = comsumer.pop_front_n(10)?;
         if items.len() > 0 {
             message_count += items.len();
-            // if message_count % (1024 * 100) == 0 {
+            if message_count % (1024 * 100) == 0 {
                 println!("Got message: {}", String::from_utf8(items[0].data.clone())?);
-            // }
+            }
         } else {
             println!("Read {} messages.", message_count);
             break;
