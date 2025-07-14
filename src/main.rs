@@ -12,6 +12,9 @@ use std::time::Duration;
 use std::env;
 use futures::future::try_join_all;
 
+mod queue;
+use queue::get_queue;
+
 async fn subscribe_loop(
     mut client: QueueBridgeBalancerClient<Channel>,
     queue_id: String,
@@ -21,6 +24,10 @@ async fn subscribe_loop(
             Ok(mut resp) => {
                 while let Ok(Some(QueueMessage{queue_id:_, message})) = resp.get_mut().message().await {
                     println!("{}: {:?}", queue_id, message);
+                    if let Err(_) = get_queue().push_back(&queue_id, &message).await {
+                        println!("Push to queue error, stopping.");
+                        break;
+                    }
                 }
             }
             Err(e) => eprintln!("stream error on {queue_id}: {e}"),
