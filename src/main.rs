@@ -36,8 +36,8 @@ async fn subscribe_loop(
             Ok(mut resp) => {
                 while let Ok(Some(QueueMessage{queue_id:_, message})) = resp.get_mut().message().await {
                     // println!("{}: {:?}", queue_id, message);
-                    if let Err(_) = get_queue().push_back(&queue_id, &message).await {
-                        println!("Push to queue error, stopping.");
+                    if let Err(e) = get_queue().push_back(&queue_id, &message).await {
+                        println!("Push to queue error: {e}, stopping.");
                         break;
                     }
                 }
