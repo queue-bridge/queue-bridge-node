@@ -80,6 +80,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(test)]
+use itertools::Itertools;
+
 #[tokio::test]
 async fn test_push_message() -> Result<(), anyhow::Error> {
     let channel = Endpoint::from_shared(format!("http://127.0.0.1:50051"))?
@@ -88,12 +91,16 @@ async fn test_push_message() -> Result<(), anyhow::Error> {
         .await?;
 
     let mut client = QueueBridgeBalancerClient::new(channel);
-    for i in 0..1024*100 {
-        client.push(QueueMessage{
+    let mut i = 0;
+    let chunk_size = 128;
+    for batch in &(0..1024*100).chunks(chunk_size) {
+        let messages: Vec<QueueMessage> = batch.map(|i| QueueMessage{
             queue_id: "ddj".to_string(),
             message: format!("msg: {i}").as_bytes().to_vec()
-        }).await?;
+        }).collect();
+        client.push_batch(queuebridge::PushBatchRequest{ messages }).await?;
 
+        i += chunk_size;
         if i % 8192 == 0 {
             println!("Pushed {i} messages.");
         }

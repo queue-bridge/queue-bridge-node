@@ -4,6 +4,7 @@ package queuebridge;
 
 service QueueBridgeBalancer {
   rpc Push(QueueMessage) returns (EmptyResponse);
+  rpc PushBatch(PushBatchRequest) returns (EmptyResponse);
   rpc Subscribe(SubscribeRequest) returns (stream QueueMessage);
   rpc Heartbeat(HeartbeatRequest) returns (EmptyResponse);
 }
@@ -23,6 +24,10 @@ message QueueMessage {
 message QueueLag {
   string queue_id = 1;
   int64 lag = 2;
+}
+
+message PushBatchRequest {
+  repeated QueueMessage messages = 1;
 }
 
 message HeartbeatRequest {
