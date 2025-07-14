@@ -3,6 +3,8 @@ use std::sync::{OnceLock, Arc};
 use tokio::sync::Mutex;
 use lmdb_queue::{Env, topic::{Topic, Producer}};
 
+use super::QueueLag;
+
 static ENV: OnceLock<Env> = OnceLock::new();
 fn get_env() -> &'static Env {
     ENV.get_or_init(|| Env::new("/tmp/queue-bridge", None, None).unwrap())
@@ -35,10 +37,12 @@ impl <'env> Queue<'env> {
         Ok(())
     }
 
-    pub async fn lag_of(&self, topic_name: &str) -> Result<u64, anyhow::Error> {
-        let mut topics = self.topics.lock().await;
-        let producer = topics.entry(topic_name.to_string()).or_insert_with(move || self.env.producer(topic_name, None).unwrap());
-        let lag = producer.lag()?;
-        Ok(lag)
+    pub async fn lags(&self) -> Result<Vec<QueueLag>, anyhow::Error> {
+        let topics = self.topics.lock().await;
+        let lags: Vec<QueueLag> = topics.iter()
+            .map(|(name, producer)|
+                QueueLag{ queue_id: name.clone(), lag: producer.lag().unwrap_or_default() as i64 }
+            ).collect();
+        Ok(lags)
     }
 }

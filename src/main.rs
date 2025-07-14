@@ -2,8 +2,10 @@ mod queuebridge {
     tonic::include_proto!("queuebridge");
 }
 
+pub use queuebridge::QueueLag;
 use queuebridge::queue_bridge_balancer_client::QueueBridgeBalancerClient;
-use queuebridge::{SubscribeRequest, QueueMessage};
+use queuebridge::{SubscribeRequest, QueueMessage, HeartbeatRequest};
+
 use tonic::transport::{Channel, Endpoint};
 // use tonic::Status;
 // use tokio_stream::StreamExt;
@@ -14,6 +16,16 @@ use futures::future::try_join_all;
 
 mod queue;
 use queue::get_queue;
+
+async fn heartbeat_loop(mut client: QueueBridgeBalancerClient<Channel>) {
+    loop {
+        if let Ok(queue_lags) = get_queue().lags().await {
+            _ = client.heartbeat(HeartbeatRequest{ queue_lags }).await;
+        }
+
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
+}
 
 async fn subscribe_loop(
     mut client: QueueBridgeBalancerClient<Channel>,
@@ -58,8 +70,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
 
         for topic in &topics {
-            let client = queuebridge::queue_bridge_balancer_client::QueueBridgeBalancerClient::new(channel.clone());
-            tasks.push(tokio::spawn(subscribe_loop(client, topic.clone())));
+            tasks.push(tokio::spawn(subscribe_loop(QueueBridgeBalancerClient::new(channel.clone()), topic.clone())));
+            tasks.push(tokio::spawn(heartbeat_loop(QueueBridgeBalancerClient::new(channel.clone()))));
         }
     }
 
