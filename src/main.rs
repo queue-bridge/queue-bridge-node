@@ -93,7 +93,7 @@ async fn test_push_message() -> Result<(), anyhow::Error> {
     let mut client = QueueBridgeBalancerClient::new(channel);
     let mut i = 0;
     let chunk_size = 128;
-    for batch in &(0..1024*100).chunks(chunk_size) {
+    for batch in &(0..1024*1000).chunks(chunk_size) {
         let messages: Vec<QueueMessage> = batch.map(|i| QueueMessage{
             queue_id: "ddj".to_string(),
             message: format!("msg: {i}").as_bytes().to_vec()
@@ -101,7 +101,7 @@ async fn test_push_message() -> Result<(), anyhow::Error> {
         client.push_batch(queuebridge::PushBatchRequest{ messages }).await?;
 
         i += chunk_size;
-        if i % 8192 == 0 {
+        if i % 102400 == 0 {
             println!("Pushed {i} messages.");
         }
     }
