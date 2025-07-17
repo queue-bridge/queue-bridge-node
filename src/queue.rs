@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::collections::BTreeMap;
 use std::sync::{OnceLock, Arc};
 use tokio::sync::Mutex;
@@ -6,8 +7,8 @@ use lmdb_queue::{Env, topic::{Topic, Producer}};
 use super::QueueLag;
 
 static ENV: OnceLock<Env> = OnceLock::new();
-fn get_env() -> &'static Env {
-    ENV.get_or_init(|| Env::new("/tmp/queue-bridge", None, None).unwrap())
+pub fn init_env<P: AsRef<Path>>(path: P) {
+    let _ = ENV.set(Env::new(path, None, None).unwrap());
 }
 
 static QUEUE: OnceLock<Queue> = OnceLock::new();
@@ -24,7 +25,7 @@ pub fn get_queue<'env>() -> &'static Queue<'env> {
 impl <'env> Queue<'env> {
     fn new() -> Result<Self, anyhow::Error> {
         Ok(Self {
-          env: get_env(),
+          env: ENV.get().unwrap(),
           topics: Arc::new(Mutex::new(BTreeMap::new()))
         })
     }

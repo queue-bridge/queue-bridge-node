@@ -15,7 +15,7 @@ use std::env;
 use futures::future::try_join_all;
 
 mod queue;
-use queue::get_queue;
+use queue::{init_env, get_queue};
 
 async fn heartbeat_loop(mut client: QueueBridgeBalancerClient<Channel>) {
     loop {
@@ -60,6 +60,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or("ddj".to_string())
             .split(',').map(|t| t.trim().to_string())
             .collect();
+
+    let path = env::var("DATA_PATH").unwrap_or("/tmp/queue-bridge".to_string());
+    init_env(path);
 
     // Build one channel per server, enable TLS if needed.
     let mut tasks = Vec::new();
