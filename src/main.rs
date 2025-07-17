@@ -62,6 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .collect();
 
     let path = env::var("DATA_PATH").unwrap_or("/tmp/queue-bridge".to_string());
+    println!("Queue data path is: {path}.");
     init_env(path);
 
     // Build one channel per server, enable TLS if needed.
