@@ -10,7 +10,7 @@ tokio = { version = "1", features = ["full"] }
 tokio-stream = "0.1"
 prost = "0.13"
 futures = "0.3"
-lmdb-queue = "0.2"
+lmdb-queue = "0.3"
 anyhow = "1"
 
 [dev-dependencies]
