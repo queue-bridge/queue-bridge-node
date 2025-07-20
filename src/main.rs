@@ -116,7 +116,7 @@ async fn test_push_message() -> Result<(), anyhow::Error> {
 #[test]
 fn test_get_queue() -> Result<(), anyhow::Error> {
     let env = lmdb_queue::Env::new("/tmp/queue-bridge", None, None)?;
-    let mut comsumer = env.comsumer("ddj", None)?;
+    let mut comsumer = env.consumer("ddj", None)?;
 
     let mut message_count = 0;
     loop {
