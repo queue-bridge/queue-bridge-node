@@ -30,6 +30,13 @@ impl <'env> Queue<'env> {
         })
     }
 
+    pub async fn init_topic(&self, topic_name: &str) -> Result<(), anyhow::Error> {
+        let mut topics = self.topics.lock().await;
+        topics.entry(topic_name.to_string()).or_insert_with(move || self.env.producer(topic_name, None).unwrap());
+        
+        Ok(())
+    }
+
     pub async fn push_back(&self, topic_name: &str, msg: &[u8]) -> Result<(), anyhow::Error> {
         let mut topics = self.topics.lock().await;
         let producer = topics.entry(topic_name.to_string()).or_insert_with(move || self.env.producer(topic_name, None).unwrap());

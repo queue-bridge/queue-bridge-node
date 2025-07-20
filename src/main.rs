@@ -74,6 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
 
         for topic in &topics {
+            get_queue().init_topic(topic).await?;
             tasks.push(tokio::spawn(subscribe_loop(QueueBridgeBalancerClient::new(channel.clone()), topic.clone())));
             tasks.push(tokio::spawn(heartbeat_loop(QueueBridgeBalancerClient::new(channel.clone()))));
         }
